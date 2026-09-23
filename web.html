@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>意味が分かると怖いWeb小説集 - 11話の連作怪談</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Zen+Kaku+Gothic+New:wght@300;400;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Shippori Mincho"', 'serif'],
+                        sans: ['"Zen Kaku Gothic New"', 'sans-serif'],
+                    },
+                    colors: {
+                        horror: {
+                            950: '#050508',
+                            900: '#0c0c12',
+                            800: '#161622',
+                            blood: '#881337',
+                            red: '#e11d48',
+                            pale: '#d1d5db',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050508;
+            color: #d1d5db;
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .font-novel {
+            font-family: 'Shippori Mincho', serif;
+            line-height: 2.2;
+            letter-spacing: 0.06em;
+        }
+
+        /* Ambient scanline & vignette effect */
+        .vignette {
+            box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.95);
+            pointer-events: none;
+        }
+
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 0, 0, 0.35) 50%,
+                rgba(0, 0, 0, 0.35)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+
+        /* Glitch animation for secret reveals */
+        @keyframes glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-3px, 3px) }
+            40% { transform: translate(-3px, -3px) }
+            60% { transform: translate(3px, 3px) }
+            80% { transform: translate(3px, -3px) }
+            100% { transform: translate(0) }
+        }
+        .animate-glitch {
+            animation: glitch 0.25s cubic-bezier(.25, .46, .45, .94) both;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050508;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #881337;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative selection:bg-rose-950 selection:text-rose-200">
+
+    <!-- Ambient Visual Overlays -->
+    <div class="fixed inset-0 vignette z-30 opacity-90"></div>
+    <div class="fixed inset-0 scanlines z-20 opacity-25"></div>
+
+    <!-- Header Navigation with Secret Keyword Search & Audio Control -->
+    <header class="sticky top-0 z-40 bg-horror-950/90 backdrop-blur-md border-b border-zinc-800/80 px-4 py-3">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+                <span class="text-rose-600 text-lg sm:text-xl font-novel font-bold tracking-widest flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-rose-600 animate-ping inline-block"></span>
+                    意味が分かると怖い話
+                </span>
+                <span id="archive-badge" class="text-[10px] text-zinc-500 border border-zinc-800 px-2 py-0.5 rounded uppercase font-mono">Archive / 10 Stories</span>
+            </div>
+
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <!-- Search Keyword Input -->
+                <div class="relative flex-1 sm:w-64">
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        placeholder="検索..." 
+                        class="w-full bg-horror-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-rose-700 transition"
+                    >
+                    <button id="search-btn" class="absolute right-1 top-1/2 -translate-y-1/2 bg-rose-950 hover:bg-rose-900 text-rose-300 text-xs px-2.5 py-1 rounded border border-rose-800/60 transition">
+                        検索
+                    </button>
+                </div>
+
+                <!-- Web Audio BGM Toggle Button -->
+                <button id="audio-toggle-btn" class="flex-shrink-0 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-rose-400 px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition">
+                    <span id="audio-icon">🔇</span>
+                    <span id="audio-label" class="hidden sm:inline">環境音 OFF</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Reader Layout -->
+    <main class="max-w-5xl w-full mx-auto px-4 py-6 md:py-10 flex-1 flex flex-col md:flex-row gap-6 relative z-10">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-72 flex-shrink-0">
+            <div class="bg-horror-900/80 border border-zinc-800/80 rounded-xl p-4 sticky top-20 shadow-xl backdrop-blur-sm">
+                <h2 class="text-xs font-bold text-zinc-400 tracking-wider uppercase border-b border-zinc-800 pb-2 mb-3 flex items-center justify-between">
+                    <span>目次 (STORIES)</span>
+                    <span id="story-count-badge" class="text-[10px] text-rose-500 font-mono">全10話</span>
+                </h2>
+                <nav id="story-menu" class="space-y-1 text-sm font-novel max-h-[40vh] md:max-h-[60vh] overflow-y-auto pr-1">
+                    <!-- Populated dynamically via JS -->
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Story Article Viewer -->
+        <article class="flex-1 bg-horror-900/60 border border-zinc-800/80 rounded-2xl p-6 md:p-10 shadow-2xl backdrop-blur-sm flex flex-col justify-between min-h-[500px]">
+            <div>
+                <!-- Article Header -->
+                <div class="border-b border-zinc-800/80 pb-4 mb-6">
+                    <div class="flex items-center justify-between text-xs text-rose-500/80 font-mono mb-2">
+                        <span id="story-number">STORY #01</span>
+                        <span id="story-date">2026/04/12</span>
+                    </div>
+                    <h1 id="story-title" class="text-2xl md:text-3xl font-bold font-novel text-zinc-100 tracking-wide mb-2">
+                        読み込み中...
+                    </h1>
+                    <div id="story-author" class="text-xs text-zinc-500 font-mono">
+                        投稿者: -
+                    </div>
+                </div>
+
+                <!-- Story Text Body -->
+                <div id="story-body" class="font-novel text-zinc-300 space-y-4 leading-relaxed text-base md:text-lg">
+                    <!-- Paragraphs populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Footer Pagination Controls -->
+            <div class="border-t border-zinc-800/80 pt-6 mt-8 flex items-center justify-between">
+                <button id="prev-btn" class="bg-zinc-900 hover:bg-zinc-800 disabled:opacity-30 disabled:hover:bg-zinc-900 text-zinc-300 px-4 py-2 rounded-lg text-xs font-mono border border-zinc-800 transition flex items-center gap-1">
+                    ← 前の話
+                </button>
+
+                <span id="read-counter" class="text-xs text-zinc-500 font-mono">
+                    1 / 11
+                </span>
+
+                <button id="next-btn" class="bg-rose-950 hover:bg-rose-900 disabled:opacity-30 disabled:hover:bg-rose-950 text-rose-200 px-4 py-2 rounded-lg text-xs font-mono border border-rose-800 transition flex items-center gap-1">
+                    次の話 →
+                </button>
+            </div>
+        </article>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-zinc-900 py-4 text-center text-[11px] text-zinc-600 font-mono relative z-10">
+        Web Novel Archive &copy; 2026 | 意味が分かると怖いWeb小説集
+    </footer>
+
+    <!-- Secret Truth Modal Overlay -->
+    <div id="secret-modal" class="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 hidden">
+        <div class="max-w-2xl w-full bg-zinc-950 border-2 border-rose-800 rounded-2xl p-6 md:p-8 shadow-[0_0_50px_rgba(225,29,72,0.35)] relative max-h-[90vh] overflow-y-auto">
+            <!-- Modal Close Button -->
+            <button id="close-modal-btn" class="absolute top-4 right-4 text-zinc-500 hover:text-rose-400 text-lg font-mono p-1">
+                ✕ 閉じる
+            </button>
+
+            <div class="text-center border-b border-rose-900/60 pb-4 mb-6 pr-8">
+                <span class="text-xs text-rose-500 font-mono tracking-widest uppercase block mb-1">⚠️ ULTRA SECRET ARCHIVE - FILE #109</span>
+                <h2 class="text-xl md:text-2xl font-novel font-bold text-rose-400 tracking-wider">
+                    【全11話の全貌：怪人物『神崎』と狂気のクロニクル】
+                </h2>
+            </div>
+            
+            <div id="secret-modal-content" class="text-sm text-zinc-300 space-y-4 font-sans leading-relaxed">
+                <!-- Content injected dynamically via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Multi Ending Modal Overlay -->
+    <div id="ending-modal" class="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 hidden">
+        <div class="max-w-xl w-full bg-horror-950 border-2 border-rose-900 rounded-2xl p-6 md:p-8 shadow-[0_0_60px_rgba(136,19,55,0.6)] relative max-h-[90vh] overflow-y-auto text-center space-y-5">
+            <div id="ending-badge" class="inline-block bg-rose-950 text-rose-300 border border-rose-800 text-xs font-mono px-3 py-1 rounded-full uppercase tracking-widest">
+                BAD ENDING #01
+            </div>
+            <h2 id="ending-title" class="text-xl md:text-2xl font-novel font-bold text-rose-400 tracking-wide">
+                -
+            </h2>
+            <div id="ending-body" class="text-sm text-zinc-300 font-serif leading-relaxed text-left bg-zinc-950 p-4 rounded-xl border border-zinc-800 space-y-3">
+                <!-- Ending text -->
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2.5 justify-center pt-2">
+                <button id="retry-ending-btn" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs py-2.5 px-4 rounded-lg border border-zinc-700 transition font-mono">
+                    🔄 別の行動を選択する
+                </button>
+                <button id="ending-to-secret-btn" class="bg-rose-950 hover:bg-rose-900 text-rose-200 text-xs py-2.5 px-4 rounded-lg border border-rose-800 transition font-mono">
+                    🔍 検索画面へ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyword Search Results Modal -->
+    <div id="keyword-modal" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 hidden">
+        <div class="max-w-2xl w-full bg-horror-900 border border-zinc-700/80 rounded-2xl p-6 shadow-2xl relative max-h-[85vh] flex flex-col">
+            <button id="close-keyword-modal-btn" class="absolute top-4 right-4 text-zinc-400 hover:text-rose-400 font-mono text-sm">
+                ✕ 閉じる
+            </button>
+            <div class="border-b border-zinc-800 pb-3 mb-4">
+                <div class="text-xs text-rose-500 font-mono">SEARCH DATABASE / KEYWORD MATCH</div>
+                <h2 id="keyword-modal-title" class="text-lg font-bold font-novel text-zinc-100">
+                    検索結果
+                </h2>
+            </div>
+            <div id="keyword-modal-content" class="flex-1 overflow-y-auto space-y-4 pr-1">
+                <!-- Matches list populated via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Application JavaScript Engine -->
+    <script>
+        const stories = [
+            {
+                id: 1,
+                number: "STORY #01",
+                title: "向かいの窓の女",
+                author: "大学生の投稿",
+                date: "2026/04/12",
+                paragraphs: [
+                    "大学進学に合わせて一人暮らしを始めたマンションの向かいの部屋に、若い女性が引っ越してきた。",
+                    "彼女はいつも窓辺に立ち、微動だにせずこちらを見つめている。白いワンピースを着て、挨拶をしてもピクリとも反応しない。「変な人だな」と思いつつ過ごしていたが、一週間後、警察が向かいの部屋にやってきた。",
+                    "彼女は部屋の中で首を吊った状態で発見されたという。警察官がロープを切った瞬間、窓辺に直立していた彼女がゆっくり横に倒れていくのが見えた。つまり彼女は一週間ずっと死体として窓辺に吊り下がっていたのだ。",
+                    "その傍らで、アパートの管理会社を名乗る男が、胸元にある『衤』の文字だけが掠れて残った古びた名札を触りながら、不気味な笑みを浮かべて警察に事情を説明していた。"
+                ]
+            },
+            {
+                id: 2,
+                number: "STORY #02",
+                title: "夜中の押入れと幼い息子",
+                author: "二児の母",
+                date: "2026/05/01",
+                paragraphs: [
+                    "3歳になる息子が、ここ最近夜中になると決まって和室の押入れを指差し、「あそこにお兄ちゃんがいるよ」と呟くようになった。",
+                    "子供特有の想像上の友達（イマジナリーフレンド）だろうと思い、気に留めずに過ごしていた。だが昨日の夜、ふと目が覚めると息子が開け放たれた押入れの天井に向かって、嬉しそうに何か語りかけていた。",
+                    "気味が悪くなり、翌朝息子が幼稚園に行っている間に押入れの天袋の奥を覗き込んだ。そこには、真新しい食べかけのパンのゴミと、見知らぬ男の湿った靴下が残されていた。",
+                    "そういえば先週、点検と称して家に上がってきた胸元に『K』と小さく刺繍された作業着姿の男も、これと同じくねっとりとした異臭を漂わせていた。"
+                ]
+            },
+            {
+                id: 3,
+                number: "STORY #03",
+                title: "深夜のラジオ投稿",
+                author: "ラジオリスナー",
+                date: "2026/05/18",
+                paragraphs: [
+                    "深夜、一人で作業をしながら怪談系のラジオ番組を聴いていた。その日のテーマは『ゾッとする体験談』。あるリスナーからのハガキが読まれた。",
+                    "「私は他人の家に密かに忍び込み、住人に気づかれないよう押し入れや天井裏に潜伏して、その生活を観察するのが趣味です。住人が自分の存在に気づく瞬間の顔を見るのがたまらないのです」。パーソナリティは「いやぁ、物騒なネタ投稿ですね！ラジオネーム『kazakin』さんからの投稿でしたー！」と笑い飛ばしていた。",
+                    "私も「よくできた作り話だ」と苦笑いしたが、ふと気になって部屋の天井の換気扇の隙間を覗き込んだ。",
+                    "暗闇の中で、小さなICレコーダーの赤ランプが静かに点滅していた。"
+                ]
+            },
+            {
+                id: 4,
+                number: "STORY #04",
+                title: "スマートスピーカーの応答",
+                author: "IT企業勤務",
+                date: "2026/06/02",
+                paragraphs: [
+                    "一人暮らしの自室に置いてある最新型のスマートスピーカーが、誰も喋っていないのに時折勝手に起動するようになった。",
+                    "ただの誤作動だと思っていたが、昨日の深夜3時、暗闇の中で突如「外部機器と接続しました」という合成音声が静かに響いた。自分のスマホは手元にあり、他人の端末と繋がるはずがない。",
+                    "不気味に思い、スピーカーの設定画面をスマホで開いて接続履歴を確認してみた。そこには過去数ヶ月間にわたり、毎日『KZ_HOST_09』という謎の識別名とBluetooth接続されていた記録が残っていた。",
+                    "そして画面のステータス表示を見ると、そこには『近距離接続中：距離 0m』と、目と鼻の先を示していた。"
+                ]
+            },
+            {
+                id: 5,
+                number: "STORY #05",
+                title: "留守番電話に残された声",
+                author: "派遣社員",
+                date: "2026/06/25",
+                paragraphs: [
+                    "残業を終えて遅く帰宅すると、家の固定電話に一件の留守番電話が入っていた。",
+                    "メッセージを再生すると、低くくぐもった男の声で「例の部屋の鍵、開けておいたぞ。あとは頼んだ」とだけ吹き込まれていた。単なる間違い電話だろうと思い、大して気にせず風呂に入ってベッドに入った。",
+                    "しかし真夜中、玄関の方から「ガチャガチャ」と激しくドアノブを回す音が聞こえてきた。恐怖で動けずにいると、やがて静かになり、代わりにスマホに通知が届いた。",
+                    "我が家のスマートロックの履歴に『解錠完了（合い鍵：複製キー#04）』と表示されていた。そして今、廊下から静かな足音がこちらへ近づいてくる。"
+                ]
+            },
+            {
+                id: 6,
+                number: "STORY #06",
+                title: "中古のデジタルカメラ",
+                author: "リサイクルショップ店員",
+                date: "2026/07/10",
+                paragraphs: [
+                    "リサイクルショップでアルバイトをしている。今日持ち込まれた中古のデジカメの動作確認をするため、挿入されていたSDカードのデータをパソコンで開いた。",
+                    "そこには、街中のあらゆるアパートの部屋番号の写真や、住民の登下校・出勤の様子を隠し撮りした大量の写真が保存されていた。ファイルの詳細データを開くと、所有者属性には『KZK_IMG』と記録されていた。",
+                    "ストーカーの犯罪データかと思い、ぞっとしながら最新のフォルダを開いた。",
+                    "そこに保存されていたのは、たった今、この店のカウンターでパソコンの画面を覗き込んでいる私の後ろ姿だった。"
+                ]
+            },
+            {
+                id: 7,
+                number: "STORY #07",
+                title: "エレベーターの張り紙",
+                author: "マンション住人",
+                date: "2026/07/29",
+                paragraphs: [
+                    "マンションのエレベーター内に『402号室の住人様、至急管理室までお越しください。鍵の件で確認がございます』という管理会社からの張り紙が貼られていた。",
+                    "しかし、私はこのマンションの4階に住んでいるのでよく知っているが、402号室は半年前から誰も住んでいない空き部屋のはずだ。気になってその日の夜中、402号室の前をそっと通ってみた。",
+                    "すると、施錠されているはずのドアの向こうから「次のターゲットの鍵は入手した」と低い男の話し声がはっきりと聞こえてきた。",
+                    "ドアのポストの隙間から中を覗くと、真っ暗な部屋の中で、以前街頭の防犯ポスターで見かけた男がこちらをじっと見つめていた。"
+                ]
+            },
+            {
+                id: 8,
+                number: "STORY #08",
+                title: "ソロキャンプの生配信",
+                author: "配信視聴者",
+                date: "2026/08/14",
+                paragraphs: [
+                    "お気に入りの配信者が、山奥のキャンプ場でソロキャンプの生配信を行っていた。時刻は深夜1時。",
+                    "配信者がテントの中で酒を飲みながら雑談していると、視聴者から『この近くの山に、連続不法侵入犯が逃げ込んだらしいぞ』という注意喚起のコメントが入った。配信者は「へー、そんな危険人物がいるんだ。怖いねぇ」と笑い飛ばしていた。",
+                    "しかし、配信画面の背景に映るテントの入り口の隙間から、ジャラジャラと無数の合鍵をぶら下げた男がゆっくりと這い入ってくるのが見えた。",
+                    "チャット欄は悲鳴で埋め尽くされたが、配信者はスマホの画面を見ておらず、まだ気づいていない。"
+                ]
+            },
+            {
+                id: 9,
+                number: "STORY #09",
+                title: "深夜のタクシー",
+                author: "タクシー運転手",
+                date: "2026/08/30",
+                paragraphs: [
+                    "雨の降る深夜、山道の途中でびしょ濡れの服を着た男が手を挙げて乗り込んできた。行き先を尋ねると、ボソッと「山奥の廃病院まで」と答えた。",
+                    "バックミラー越しに男の様子を観察すると、濡れたカバンの中からジャラジャラと大量の鍵束を取り出し、ひとつひとつ愛おしそうに眺めていた。気味が悪くなりスピードを上げていると、車内のラジオから緊急ニュースが流れた。",
+                    "「広域連続侵入・殺人事件で全国指名手配中の か……き 容疑者ですが、逃走に使用されたと見られる車両が…」。",
+                    "ハッとしてミラーを見ると、後部座席の男が私の首元へゆっくりと手を伸ばしていた。"
+                ]
+            },
+            {
+                id: 10,
+                number: "STORY #10",
+                title: "遺留品のボイスレコーダー",
+                author: "警察捜査員",
+                date: "2026/09/15",
+                paragraphs: [
+                    "山中で発見された指名手配犯の遺留品の中に、小さなICレコーダーがあった。再生すると、そこには被害者たちの生活音が静かに録音されていた。",
+                    "面談記録や捜査資料の最後のファイルには、キーボードのタイピング音と共に『これでサイトの準備はできた』という男の呟きが入っていた。男は自身が犯した事件をWeb小説に仕立てて投稿し、それに気づいた読者を次の標的に選ぶ狩りを始めていたのだ。",
+                    "通信解析の結果、そのサイトは今も更新され続けており、リアルタイムでアクセス中の閲覧者の情報が男の元へ送信され続けているという。"
+                ]
+            },
+            {
+                id: 11,
+                number: "STORY #11",
+                title: "このサイトを読んでいるあなたへ",
+                author: "管理人",
+                date: "2026/09/24",
+                paragraphs: [
+                    "ここまで物語をお読みいただき、ありがとうございます。",
+                    "お気づきでしょうか。これらの物語に登場する被害者たちは、全員あなたと同じように『あるひとりの男』の存在や痕跡に触れてしまった人々です。男は、自分という存在を認識した人間の元へ現れる性質を持っています。",
+                    "いま、あなたがこの記事を読んでいるこの瞬間も、お部屋のドアのすぐ向こう側で静かな足音が聞こえませんか？",
+                    "もし、一連の事件を引き起こした男の「名前」に思い当たりがあるなら、上の検索欄に入力してください。ただし、一度照合してしまえば、もう二度と元の日常には戻れません。"
+                ]
+            }
+        ];
+
+        const storyMenuEl = document.getElementById('story-menu');
+        const storyNumberEl = document.getElementById('story-number');
+        const storyTitleEl = document.getElementById('story-title');
+        const storyAuthorEl = document.getElementById('story-author');
+        const storyDateEl = document.getElementById('story-date');
+        const storyBodyEl = document.getElementById('story-body');
+        const readCounterEl = document.getElementById('read-counter');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+
+        const secretModal = document.getElementById('secret-modal');
+        const secretModalContent = document.getElementById('secret-modal-content');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+
+        const keywordModal = document.getElementById('keyword-modal');
+        const keywordModalTitle = document.getElementById('keyword-modal-title');
+        const keywordModalContent = document.getElementById('keyword-modal-content');
+        const closeKeywordModalBtn = document.getElementById('close-keyword-modal-btn');
+
+        const audioToggleBtn = document.getElementById('audio-toggle-btn');
+        const audioIcon = document.getElementById('audio-icon');
+        const audioLabel = document.getElementById('audio-label');
+
+        const endingModal = document.getElementById('ending-modal');
+        const endingBadge = document.getElementById('ending-badge');
+        const endingTitle = document.getElementById('ending-title');
+        const endingBody = document.getElementById('ending-body');
+        const retryEndingBtn = document.getElementById('retry-ending-btn');
+        const endingToSecretBtn = document.getElementById('ending-to-secret-btn');
+
+        let currentIndex = 0;
+        let isStory11Unlocked = false;
+        const unlockedEndings = new Set();
+
+        let audioCtx = null;
+        let isAudioPlaying = false;
+        let noiseNode = null;
+        let droneOsc1 = null;
+        let droneOsc2 = null;
+        let lfoOsc = null;
+        let masterGain = null;
+
+        // ノイズバッファの作成（風・雨のような環境音）
+        function createNoiseBuffer(ctx) {
+            const bufferSize = ctx.sampleRate * 2;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const output = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            return buffer;
+        }
+
+        function toggleAmbientAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            if (isAudioPlaying) {
+                if (masterGain) {
+                    masterGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+                    setTimeout(() => {
+                        try {
+                            if (noiseNode) noiseNode.stop();
+                            if (droneOsc1) droneOsc1.stop();
+                            if (droneOsc2) droneOsc2.stop();
+                            if (lfoOsc) lfoOsc.stop();
+                        } catch(e) {}
+                        isAudioPlaying = false;
+                        if (audioIcon) audioIcon.textContent = '🔇';
+                        if (audioLabel) audioLabel.textContent = '環境音 OFF';
+                    }, 500);
+                }
+            } else {
+                try {
+                    const now = audioCtx.currentTime;
+
+                    // マスターゲイン
+                    masterGain = audioCtx.createGain();
+                    masterGain.gain.setValueAtTime(0.001, now);
+                    masterGain.gain.exponentialRampToValueAtTime(0.12, now + 1.0);
+
+                    // 1. ノイズソース（不気味な風・不協和音の音）
+                    const noiseBuffer = createNoiseBuffer(audioCtx);
+                    noiseNode = audioCtx.createBufferSource();
+                    noiseNode.buffer = noiseBuffer;
+                    noiseNode.loop = true;
+
+                    // ノイズ用バンドパスフィルター（風の唸り声のような音）
+                    const noiseFilter = audioCtx.createBiquadFilter();
+                    noiseFilter.type = 'bandpass';
+                    noiseFilter.frequency.setValueAtTime(320, now);
+                    noiseFilter.Q.setValueAtTime(3.0, now);
+
+                    // 風の周期的なうねりを生むLFO
+                    lfoOsc = audioCtx.createOscillator();
+                    lfoOsc.frequency.setValueAtTime(0.15, now); // 0.15Hzのゆったりとした周期
+                    const lfoGain = audioCtx.createGain();
+                    lfoGain.gain.setValueAtTime(180, now);
+                    lfoOsc.connect(lfoGain);
+                    lfoGain.connect(noiseFilter.frequency);
+
+                    // 2. ドローン音（闇を感じさせる重低音）
+                    droneOsc1 = audioCtx.createOscillator();
+                    droneOsc2 = audioCtx.createOscillator();
+                    droneOsc1.type = 'sawtooth';
+                    droneOsc2.type = 'sine';
+
+                    droneOsc1.frequency.setValueAtTime(65.41, now); // C2
+                    droneOsc2.frequency.setValueAtTime(68.80, now); // C2から少しずらして不快なうなりを生む
+
+                    const droneFilter = audioCtx.createBiquadFilter();
+                    droneFilter.type = 'lowpass';
+                    droneFilter.frequency.setValueAtTime(220, now);
+
+                    // 接続
+                    noiseNode.connect(noiseFilter);
+                    noiseFilter.connect(masterGain);
+
+                    droneOsc1.connect(droneFilter);
+                    droneOsc2.connect(droneFilter);
+                    droneFilter.connect(masterGain);
+
+                    masterGain.connect(audioCtx.destination);
+
+                    // 再生開始
+                    noiseNode.start(now);
+                    droneOsc1.start(now);
+                    droneOsc2.start(now);
+                    lfoOsc.start(now);
+
+                    isAudioPlaying = true;
+                    if (audioIcon) audioIcon.textContent = '🔊';
+                    if (audioLabel) audioLabel.textContent = '環境音 ON';
+                } catch(e) {
+                    console.error("Audio Playback Error:", e);
+                }
+            }
+        }
+
+        function searchKeyword(keyword) {
+            if (searchInput) searchInput.value = keyword;
+            handleSearch();
+        }
+
+        function handleSearch() {
+            const rawVal = searchInput ? searchInput.value.trim() : '';
+            if (!rawVal) return;
+
+            const query = rawVal.toLowerCase();
+            const secretKeywords = ['神崎', 'かんざき', 'カンザキ', 'kanzaki', '神崎達也', 'かんざきたつや'];
+
+            if (secretKeywords.some(k => query.includes(k))) {
+                if (secretModalContent) {
+                    secretModalContent.innerHTML = `
+                        <div class="space-y-4 text-xs md:text-sm">
+                            <div class="p-3 bg-rose-950/40 border border-rose-800/80 rounded-lg text-rose-300">
+                                <strong>【緊急捜査資料：全11話の全貌】</strong><br>
+                                容疑者：<strong>神崎 達也（カンザキ タツヤ）</strong> / 41歳<br>
+                                指名手配容疑：住居侵入、盗聴・盗撮、連続殺人・死体遺棄
+                            </div>
+                            <p class="leading-relaxed">
+                                一連の投稿記事はフィクションではありません。指名手配犯・神崎達也が自ら仕掛けた「次なる犠牲者誘き寄せ（ハンティング）用Webサイト」です。
+                            </p>
+                            <ul class="list-disc pl-5 space-y-2 text-zinc-300">
+                                <li><strong>STORY #01:</strong> 神崎が女性を首吊り殺害後、アパート管理会社社員に偽装して現場に居合わせ隠蔽（名札に『衤』）。</li>
+                                <li><strong>STORY #02:</strong> 逃走中、民家の押入れ天井裏に長期間密かに潜伏（作業着『K』）。</li>
+                                <li><strong>STORY #03:</strong> 天井裏からICレコーダーで生活音を盗聴・ラジオ番組へ不気味な投稿（『kazakin』＝kanzaki）。</li>
+                                <li><strong>STORY #04:</strong> ターゲットのスマートスピーカーへBluetooth (KZ_HOST_09) 経由で不法侵入。</li>
+                                <li><strong>STORY #05:</strong> 管理会社等を騙り合鍵を複製（複製キー#04）、侵入を重ねる。</li>
+                                <li><strong>STORY #06:</strong> デジカメ (KZK_IMG) でターゲットの行動履歴や部屋番号を盗撮。</li>
+                                <li><strong>STORY #07:</strong> 空き部屋（402号室）をアジト化し鍵を密売。</li>
+                                <li><strong>STORY #08 & #09:</strong> 配信者のテント侵入、山道でタクシー運転手を殺害して逃亡（ラジオニュース『か……き』）。</li>
+                                <li><strong>STORY #10:</strong> 警察が押収したレコーダー。神崎はこのWebサイトを作成し、閲覧者をリアルタイムで特定・追跡中。</li>
+                                <li><strong>STORY #11:</strong> 神崎を認識したあなたのもとへ、彼はいま向かっています。</li>
+                            </ul>
+                            <div class="p-3 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 font-mono text-center">
+                                ⚠️ 警告：あなたのお手元のスマートロック・ドアは解錠されました。
+                            </div>
+                        </div>
+                    `;
+                }
+                if (secretModal) secretModal.classList.remove('hidden');
+            } else {
+                const matched = [];
+                stories.forEach((s, idx) => {
+                    const textAll = s.title + ' ' + s.paragraphs.join(' ');
+                    if (textAll.includes(rawVal)) {
+                        matched.push({ index: idx, story: s });
+                    }
+                });
+
+                if (keywordModalTitle) keywordModalTitle.textContent = `キーワード検索: 「${rawVal}」 (${matched.length}件一致)`;
+
+                if (keywordModalContent) {
+                    if (matched.length === 0) {
+                        keywordModalContent.innerHTML = `
+                            <div class="p-8 text-center text-zinc-500 font-mono">
+                                該当する記録または人物データが見つかりませんでした。<br>
+                                作中の不審な言動や合鍵・部屋番号・名札等から『真相』に繋がる人物名を検索してください。
+                            </div>
+                        `;
+                    } else {
+                        keywordModalContent.innerHTML = matched.map(m => `
+                            <div onclick="selectStory(${m.index}); if(keywordModal) keywordModal.classList.add('hidden');" class="p-4 bg-zinc-950 hover:bg-rose-950/40 border border-zinc-800 hover:border-rose-800 rounded-xl cursor-pointer transition group">
+                                <div class="flex items-center justify-between text-xs font-mono text-rose-500 mb-1">
+                                    <span>${m.story.number}</span>
+                                    <span>${m.story.date}</span>
+                                </div>
+                                <h4 class="font-bold font-novel text-zinc-200 group-hover:text-rose-300 text-sm mb-1">${m.story.title}</h4>
+                                <p class="text-xs text-zinc-400 line-clamp-2">${m.story.paragraphs[0]}</p>
+                            </div>
+                        `).join('');
+                    }
+                }
+                if (keywordModal) keywordModal.classList.remove('hidden');
+            }
+        }
+
+        function renderMenu() {
+            if (!storyMenuEl) return;
+            const maxStories = isStory11Unlocked ? stories.length : 10;
+
+            let html = '';
+            for (let i = 0; i < maxStories; i++) {
+                const s = stories[i];
+                const isActive = i === currentIndex;
+                html += `
+                    <button onclick="selectStory(${i})" class="w-full text-left px-3 py-2 rounded-lg transition text-xs flex items-center justify-between ${
+                        isActive 
+                            ? 'bg-rose-950/80 text-rose-200 border border-rose-800/80 font-bold' 
+                            : 'hover:bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 border border-transparent'
+                    }">
+                        <span class="truncate">${s.number}: ${s.title}</span>
+                        ${i === 10 ? '<span class="text-[9px] bg-rose-900/80 text-rose-200 px-1.5 py-0.5 rounded font-mono">解禁</span>' : ''}
+                    </button>
+                `;
+            }
+            storyMenuEl.innerHTML = html;
+        }
+
+        function selectStory(index) {
+            loadStory(index);
+        }
+
+        function loadStory(index) {
+            currentIndex = index;
+
+            if (currentIndex === 9 && !isStory11Unlocked) {
+                isStory11Unlocked = true;
+                const storyCountBadge = document.getElementById('story-count-badge');
+                if (storyCountBadge) storyCountBadge.textContent = '全11話';
+                const archiveBadge = document.getElementById('archive-badge');
+                if (archiveBadge) archiveBadge.textContent = 'Archive / 11 Stories';
+
+                document.body.classList.add('animate-glitch');
+                setTimeout(() => document.body.classList.remove('animate-glitch'), 400);
+            }
+
+            const story = stories[currentIndex];
+
+            if (storyNumberEl) storyNumberEl.textContent = story.number;
+            if (storyTitleEl) storyTitleEl.textContent = story.title;
+            if (storyAuthorEl) storyAuthorEl.textContent = `投稿者: ${story.author}`;
+            if (storyDateEl) storyDateEl.textContent = story.date;
+
+            let bodyContent = story.paragraphs.map(p => `<p class="leading-relaxed">${p}</p>`).join('');
+
+            if (currentIndex === 10) {
+                bodyContent += `
+                    <div class="mt-8 pt-6 border-t border-rose-900/60 bg-rose-950/20 p-5 rounded-2xl border border-rose-950/80">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-xs font-bold font-mono text-rose-400 tracking-wider">⚠️ あなたの行動を選択してください</span>
+                            <span class="text-[10px] text-zinc-500 font-mono">回収エンド: <span id="ending-count-badge" class="text-rose-400 font-bold">${unlockedEndings.size}</span> / 3</span>
+                        </div>
+                        <div class="space-y-2.5 font-sans">
+                            <button onclick="triggerEnding(1)" class="w-full text-left bg-zinc-900 hover:bg-rose-950/80 hover:border-rose-700 text-zinc-200 p-3.5 rounded-xl border border-zinc-800 transition flex items-center justify-between group">
+                                <span class="text-xs font-serif group-hover:text-rose-200">1. ドアの覗き穴（ドアスコープ）から外を覗く</span>
+                                <span class="text-[10px] text-zinc-500 font-mono">▶ 実行</span>
+                            </button>
+                            <button onclick="triggerEnding(2)" class="w-full text-left bg-zinc-900 hover:bg-rose-950/80 hover:border-rose-700 text-zinc-200 p-3.5 rounded-xl border border-zinc-800 transition flex items-center justify-between group">
+                                <span class="text-xs font-serif group-hover:text-rose-200">2. 鍵をしっかり締め、ベッドで布団をかぶる</span>
+                                <span class="text-[10px] text-zinc-500 font-mono">▶ 実行</span>
+                            </button>
+                            <button onclick="triggerEnding(3)" class="w-full text-left bg-zinc-900 hover:bg-rose-950/80 hover:border-rose-700 text-zinc-200 p-3.5 rounded-xl border border-zinc-800 transition flex items-center justify-between group">
+                                <span class="text-xs font-serif group-hover:text-rose-200">3. スマホを取り出し、急いで110番に通報する</span>
+                                <span class="text-[10px] text-zinc-500 font-mono">▶ 実行</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (storyBodyEl) storyBodyEl.innerHTML = bodyContent;
+
+            const totalVisibleStories = isStory11Unlocked ? 11 : 10;
+            if (readCounterEl) readCounterEl.textContent = `${currentIndex + 1} / ${totalVisibleStories}`;
+
+            if (prevBtn) prevBtn.disabled = currentIndex === 0;
+            if (nextBtn) nextBtn.disabled = currentIndex === (isStory11Unlocked ? stories.length - 1 : 9);
+
+            renderMenu();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function triggerEnding(id) {
+            const ending = endingData[id];
+            if (!ending) return;
+
+            unlockedEndings.add(id);
+
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(160, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.8);
+                gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.8);
+            } catch(e) {}
+
+            document.body.classList.add('animate-glitch');
+            setTimeout(() => document.body.classList.remove('animate-glitch'), 450);
+
+            if (endingBadge) endingBadge.textContent = ending.badge;
+            if (endingTitle) endingTitle.textContent = ending.title;
+            if (endingBody) endingBody.innerHTML = ending.text;
+
+            const countBadge = document.getElementById('ending-count-badge');
+            if (countBadge) countBadge.textContent = unlockedEndings.size;
+
+            if (endingModal) endingModal.classList.remove('hidden');
+        }
+
+        if (retryEndingBtn) retryEndingBtn.addEventListener('click', () => {
+            if (endingModal) endingModal.classList.add('hidden');
+        });
+
+        if (endingToSecretBtn) endingToSecretBtn.addEventListener('click', () => {
+            if (endingModal) endingModal.classList.add('hidden');
+            if (searchInput) {
+                searchInput.focus();
+                searchInput.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+
+        if (closeModalBtn) closeModalBtn.addEventListener('click', () => {
+            if (secretModal) secretModal.classList.add('hidden');
+        });
+
+        if (closeKeywordModalBtn) closeKeywordModalBtn.addEventListener('click', () => {
+            if (keywordModal) keywordModal.classList.add('hidden');
+        });
+
+        if (searchBtn) searchBtn.addEventListener('click', handleSearch);
+        if (searchInput) {
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleSearch();
+            });
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) selectStory(currentIndex - 1);
+        });
+
+        if (nextBtn) nextBtn.addEventListener('click', () => {
+            if (currentIndex < stories.length - 1) selectStory(currentIndex + 1);
+        });
+
+        if (audioToggleBtn) audioToggleBtn.addEventListener('click', toggleAmbientAudio);
+
+        // Initialize Application Page Load
+        loadStory(0);
+    </script>
+</body>
+</html>
